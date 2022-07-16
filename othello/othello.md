@@ -43,10 +43,10 @@ data = [[1, 2, 3],
 
 ※ これらの図はあくまでもイメージです.
 
-> 二次元配列を用いることでオセロの盤面を簡単に表現できます.
-> ゲーム制作や画像処理など様々な場面で使用されます.
 
----
+二次元配列を用いることでオセロの盤面を簡単に表現できます.
+ゲーム制作や画像処理など様々な場面で使用されます.
+
 
 ## 1.2 二次元配列の生成とアクセス
 
@@ -322,7 +322,7 @@ data = [[value for j in range(col)] for i in range(row)]
 
 `row`と`col`, `value`の値を書き換えることで, 二次元配列の大きさと初期値を設定できます.
 少々ややこしい書き方ですがここでは説明しません.
-詳しく知りたい人は`リスト内包表記`で調べてみてください.
+詳しく知りたい人は"リスト内包表記"で調べてみてください.
 
 
 ### 練習問題1-4
@@ -362,7 +362,7 @@ data = [[value for j in range(col)] for i in range(row)]
 | 6   |     |     |     |     |     |     |     |     |
 | 7   |     |     |     |     |     |     |     |     |
 
-ですが盤面の外という概念を取り入れてあげた方が今後プログラミングしやすいため10×10の二次元配列で盤面を表現することにします.
+ですが**盤面の外**という概念を取り入れてあげた方が今後プログラミングしやすいため10×10の二次元配列で盤面を表現することにします.
 `■`は盤面の外を表しています.
 
 |     | 0   | 1   | 2   | 3   | 4   | 5  | 6   | 7   | 8   | 9   |
@@ -884,6 +884,97 @@ def main():
 正しい形式で入力して下さい
 ```
 
+### 模範解答
+
+ここまでの模範解答プログラムを以下に示します.
+
+```python
+SPACE = 0   # 何も置かれていない
+BLACK = 1   # 黒
+WHITE = 2   # 白
+OUT = -1    # 盤面の外(番兵)
+SIZE = 10   # 盤面の大きさ
+PLAYER = {BLACK: "黒", WHITE: "白"}
+
+
+def show_array(board):
+    for i in range(SIZE):
+        for j in range(SIZE):
+            print("{:3d}".format(board[i][j]), end='')
+        print()
+
+
+def init_board(board):
+    for i in range(1, SIZE - 1):
+        for j in range(1, SIZE - 1):
+            board[i][j] = SPACE
+
+    board[4][4] = WHITE
+    board[5][5] = WHITE
+    board[4][5] = BLACK
+    board[5][4] = BLACK
+
+
+def show_board(board):
+    print()
+    print("{:5s}".format(''), end='')
+    for n in range(1, SIZE - 1):
+        print("{:3d}".format(n), end='')
+    print()
+    for i in range(SIZE):
+        if i == 0 or i == 9:
+            print("{:2s}".format(''), end='')
+        else:
+            print("{:<2d}".format(i), end='')
+
+        for j in range(SIZE):
+            print("{:3d}".format(board[i][j]), end='')
+        print()
+    print()
+
+
+def get_move(player):
+    # 正しい形式で入力されるまで繰り返す
+    while True:
+        print(PLAYER[player] + "の番です")
+        move = input("指し手を入力してください : ")
+        move = move.split(' ')
+        # 2つの文字がスペース区切りで入力されているか
+        if len(move) == 2:
+            i = move[0]
+            j = move[1]
+            # 2つの文字が数字か
+            if i.isdecimal() and j.isdecimal():
+                i = int(i)      # 数値に変換
+                j = int(j)      # 数値に変換
+                # 2つの数値が盤面に収まる値か
+                if 1 <= i <= 8 and 1 <= j <= 8:
+                    return [i, j]
+        print("正しい形式で入力して下さい\n")
+
+
+def opp(player):
+    return 3 - player
+
+
+def main():
+    player = BLACK
+    board = [[OUT for _ in range(SIZE)] for _ in range(SIZE)]
+    init_board(board)
+
+    while True:
+        show_board(board)
+        i, j = get_move(player)
+        board[i][j] = player
+        player = opp(player)
+
+
+if __name__ == "__main__":
+    test()
+
+```
+
+
 ## 2.3 石を裏返す
 
 石を置く前に石が置けるかどうか確認する必要があります.
@@ -946,12 +1037,12 @@ def main():
 いずれも隣に白の石がないので不正な置き方になります.
 つまり条件をまとめると以下のようになります.
 
-```
-隣が相手の色ならさらに隣を見る, それ以外は不正な指し手
-さらに隣が自分の色なら正当な指し手, それ以外なら不正な差し手
-```
 
-これをプログラムで表現できれば正当な置き方かどうか確認できます.
+>* 隣が相手の石ならさらに隣を見る, 隣が相手の石でないなら不正な指し手
+>* さらに隣が自分の石なら正当な指し手, それ以外なら不正な差し手
+
+
+以上の条件をプログラムで表現できれば正当な指し手かどうか確認できます.
 
 ### 問題2-7
 
@@ -960,11 +1051,49 @@ def main():
 * 引数 : `board`, `player`, `j`(石を置く位置)
 * 戻り値 : 石を置いたときに反す石の数
 
-例えば
+例えば以下のような配列`board`と変数`player`, `j`を引数とする時は2を戻り値とします.
 
 ```python
 board = [-1, 0, 2, 2, 1, 0, 0, 0, 0, -1]
+player = 1  # 黒の手番
+j = 1       # 要素番号1の位置に石を置く
+
+print(check(board, player, j))      # 2が出力される
 ```
+
+盤面のイメージは以下の通りです. `X`の位置, つまり`board[1]`に黒石を置くと`board[4]`の黒石で挟めます.
+
+| 0   | 1   | 2   | 3   | 4   | 5  | 6  | 7  | 8  | 9  |
+|-----|-----|-----|-----|-----|----|----|----|----|----|
+| ■   | X   | ○   | ○   | ●   |    |    |    |    | ■  |
+
+プログラムをテストする際は新しく`test.py`というテスト用のファイルを作成してください.
+
+もしくは以下のように関数`test()`と関数`check()`を作成し, `if __name__ == "__main__":`以下を書き換えて下さい.
+
+```python
+# othello.pyに追記
+def check(board, player, j):
+    # ここの下にプログラムを書く
+
+
+# othello.pyに追記
+def test():
+    player = 1
+    board = [-1, 0, 2, 2, 1, 0, 0, 0, 0, -1]
+    j = 1
+
+    print(check(board, player, j))
+
+    :
+    :
+
+# main()となっている部分をtest()に書き換える
+if __name__ == "__main__":
+    test()
+```
+
+### 問題2-8
 
 
 二次元に拡張

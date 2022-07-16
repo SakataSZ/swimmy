@@ -66,22 +66,22 @@ def opp(player):
     return 3 - player
 
 
-def test():
-    def check(board, d):
-        view = 1
-        while board[d + view] == opp(player):
-            view += 1
-        print(view)
-        if board[d + view] == player:
-            print(str(view-1) + "個反せます")
-        else:
-            print("置けません")
+def check(board, player, j):
+    look = 1
+    while board[j + look] == opp(player):
+        look += 1
+    if board[j + look] == player:
+        return look - 1
+    else:
+        return 0
 
+
+def test():
     player = BLACK
-    test_board = [-1, 0, 0, 1, 0, 2, 1, 0, 0, -1]
+    board = [-1, 0, 2, 2, 1, 0, 0, 0, 0, -1]
     j = 1
-    print(test_board)
-    check(test_board, j)
+
+    print(check(board, player, j))
 
 
 def main():
