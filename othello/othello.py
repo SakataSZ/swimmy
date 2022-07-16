@@ -142,7 +142,7 @@ def game():
     init_board(board)
 
     while True:
-        show_board_cui(board)
+        show_board(board)
         if not exit_legal_move(board, player):
             print(PLAYER[player] + "は置ける場所がありません")
             player = opp(player)
