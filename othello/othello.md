@@ -428,7 +428,7 @@ if __name__ == "__main__":
 
 ### 問題2-2
 
-二次元配列を以下のように表示する関数`show_array()`を作成してください.
+二次元配列を以下のように出力する関数`show_array()`を作成してください.
 * 関数名 : `show_array`
 * 引数 : `board`
 * 戻り値 : 無し
@@ -495,6 +495,7 @@ SIZE = 10   # 盤面の大きさ
 PLAYER = {BLACK: "黒", WHITE: "白"}
 
 
+# 問題2-2
 def show_array(board):
     for i in range(SIZE):
         for j in range(SIZE):
@@ -502,6 +503,7 @@ def show_array(board):
         print()
 
 
+# 問題2-3 ~ 問題2-5
 def init_board(board):
     for i in range(1, SIZE - 1):
         for j in range(1, SIZE - 1):
@@ -513,6 +515,7 @@ def init_board(board):
     board[5][4] = BLACK
 
 
+# 問題2-6
 def show_board(board):
     print()
     print("{:5s}".format(''), end='')
@@ -532,7 +535,7 @@ def show_board(board):
 
 
 def main():
-    board = [[OUT for _ in range(SIZE)] for _ in range(SIZE)]
+    board = [[OUT for _ in range(SIZE)] for _ in range(SIZE)]   # 問題2-1
     init_board(board)
     show_board(board)
 
@@ -975,10 +978,10 @@ if __name__ == "__main__":
 ```
 
 
-## 2.3 石を裏返す
+## 2.3 石が置けるか調査する
 
-石を置く前に石が置けるかどうか確認する必要があります.
-いきなり8方向を確認するのは難しいので一方向を確認する場合を考えます.
+石を置く前に石が置けるかどうか調査する必要があります.
+いきなり8方向を調査するのは難しいので一方向を調査する場合を考えます.
 
 `ケース1`
 
@@ -1046,10 +1049,14 @@ if __name__ == "__main__":
 
 ### 問題2-7
 
-ひっくり返す石の個数を戻り値とする関数`check()`を作成してください.
+長さ10の配列`board`を1行のみから成るオセロの盤面として考えます.
+`board[0]`と`board[9]`の値は盤面の外を表す-1で, その他の要素の値は0(空白), 1(黒石), 2(白石)のいずれかです.
+要素番号`j`の位置に`player`(黒 or 白)の石を置くとき, ひっくり返す石の個数を出力する関数`check()`を作成してください.
+調査する方向は`board[j+1]`, `board[j+2]`, `board[j+3]`...というようにプラス方向のみで構いません.
+
 * 関数名 : `check`
-* 引数 : `board`, `player`, `j`(石を置く位置)
-* 戻り値 : 石を置いたときに反す石の数
+* 引数 : `board`, `player`(手番), `j`(石を置く位置)
+* 戻り値 : 石を置いたときにひっくり返す石の数
 
 例えば以下のような配列`board`と変数`player`, `j`を引数とする時は2を戻り値とします.
 
@@ -1095,54 +1102,31 @@ if __name__ == "__main__":
 
 ### 問題2-8
 
+問題2-7の`check()`をマイナス方向にも調査できるように改良した関数`bi_check()`を作成してください.
 
-二次元に拡張
-```python
-def count_turn_over(board, player, i, j, di, dj):
-    view = 1
-    while board[i + view * di][j + view * dj] == opp(player):
-        view += 1
+* 関数名 : `bi-check`
+* 引数 : `board`, `player`(手番), `j`(石を置く位置), `dj`(調査する方向)
+* 戻り値 : 石を置いたときにひっくり返す石の数
 
-    if board[i + view * di][j + view * dj] == player:
-        return view - 1
-    else:
-        return 0
+### 問題2-9
 
+問題2-8の`bi-check()`を二次元配列でも調査できるように改良した関数`count_turn_over()`を作成してください.
 
-def is_legal_move(board, player, i, j):
-    for di in range(-1, 2):
-        for dj in range(-1, 2):
-            if count_turn_over(board, player, i, j, di, dj):
-                return True
+* 関数名 : `count_turn_over()`
+* 引数 : `board`, `player`(手番), `i`(石を置く行), `j`(石を置く列), `di`(調査する方向), `dj`(調査する方向)
+* 戻り値 : 石を置いたときにひっくり返す石の数
 
-    return False
+### 問題2-10
+問題2-9で作成した`count_turn_over()`を使用して指し手が正当なものか確認する関数`is_legal_move()`を作成してください.
 
-
-def main():
-    player = BLACK
-    board = [[OUT for i in range(SIZE)] for j in range(SIZE)]
-    init_board(board)
-
-    while True:
-        show_board(board)
-        i, j = get_move(player)
-
-        if is_legal_move(board, player, i, j):
-            print("正当な指し手")
-        else:
-            print("不正な指し手")
-
-        player = opp(player)
-```
-
-
-石を反す
+### 模範解答
 ```python
 SPACE = 0   # 何も置かれていない
 BLACK = 1   # 黒
 WHITE = 2   # 白
 OUT = -1    # 盤面の外(番兵)
 SIZE = 10   # 盤面の大きさ
+PLAYER = {BLACK: "黒", WHITE: "白"}
 
 
 def show_array(board):
@@ -1182,17 +1166,20 @@ def show_board(board):
 
 
 def get_move(player):
+    # 正しい形式で入力されるまで繰り返す
     while True:
-        p = "黒" if player == BLACK else "白"
-        print(p + "の番です")
+        print(PLAYER[player] + "の番です")
         move = input("指し手を入力してください : ")
         move = move.split(' ')
+        # 2つの文字がスペース区切りで入力されているか
         if len(move) == 2:
             i = move[0]
             j = move[1]
+            # 2つの文字が数字か
             if i.isdecimal() and j.isdecimal():
-                i = int(i)
-                j = int(j)
+                i = int(i)      # 数値に変換
+                j = int(j)      # 数値に変換
+                # 2つの数値が盤面に収まる値か
                 if 1 <= i <= 8 and 1 <= j <= 8:
                     return [i, j]
         print("正しい形式で入力して下さい\n")
@@ -1202,23 +1189,38 @@ def opp(player):
     return 3 - player
 
 
+# 問題2-7
+def check(board, player, j):
+    look = 1
+    while board[j + look] == opp(player):
+        look += 1
+    if board[j + look] == player:
+        return look - 1
+    else:
+        return 0
+
+
+# 問題2-8
+def bi_check(board, player, j, dj):
+    look = 1
+    while board[j + dj*look] == opp(player):
+        look += 1
+    if board[j + dj*look] == player:
+        return look - 1
+    else:
+        return 0
+
+
 def test():
-    def check(board, d):
-        view = 1
-        while board[d + view] == opp(player):
-            view += 1
-        if board[d + view] == player:
-            print(str(view-1) + "個反せます")
-        else:
-            print("置けません")
+    player = WHITE
+    board = [-1, 0, 2, 2, 1, 0, 0, 0, 0, -1]
+    j = 5
+    dj = -1
 
-    player = BLACK
-    test_board = [-1, 0, 2, 2, 2, 2, 1, 0, 0, -1]
-    j = 1
-    print(test_board)
-    check(test_board, j)
+    print(bi_check(board, player, j, dj))
 
 
+# 問題2-9
 def count_turn_over(board, player, i, j, di, dj):
     view = 1
     while board[i + view * di][j + view * dj] == opp(player):
@@ -1230,6 +1232,7 @@ def count_turn_over(board, player, i, j, di, dj):
         return 0
 
 
+# 問題2-10
 def is_legal_move(board, player, i, j):
     if board[i][j] is not SPACE:
         return False
@@ -1242,25 +1245,6 @@ def is_legal_move(board, player, i, j):
     return False
 
 
-def exit_legal_move(board, player):
-    for i in range(1, SIZE - 1):
-        for j in range(1, SIZE - 1):
-            if is_legal_move(board, player, i, j):
-                return True
-    return False
-
-
-def set_and_turn_over(board, player, i, j):
-    for di in range(-1, 2):
-        for dj in range(-1, 2):
-            if di == 0 and dj == 0:
-                continue
-            count = count_turn_over(board, player, i, j, di, dj)
-            for c in range(count + 1):
-                board[i + c*di][j + c*dj] = player
-    board[i][j] = player
-
-
 def main():
     player = BLACK
     board = [[OUT for _ in range(SIZE)] for _ in range(SIZE)]
@@ -1269,15 +1253,15 @@ def main():
     while True:
         show_board(board)
         i, j = get_move(player)
-
         if is_legal_move(board, player, i, j):
-            set_and_turn_over(board, player, i, j)
-            player = opp(player)
+            print("石を置けます")
         else:
-            print("不正な手です")
+            print("石を置けません")
+        player = opp(player)
 
 
 if __name__ == "__main__":
     main()
 
 ```
+

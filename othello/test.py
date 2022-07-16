@@ -76,12 +76,46 @@ def check(board, player, j):
         return 0
 
 
-def test():
-    player = BLACK
-    board = [-1, 0, 2, 2, 1, 0, 0, 0, 0, -1]
-    j = 1
+def bi_check(board, player, j, dj):
+    look = 1
+    while board[j + dj*look] == opp(player):
+        look += 1
+    if board[j + dj*look] == player:
+        return look - 1
+    else:
+        return 0
 
-    print(check(board, player, j))
+
+def test():
+    player = WHITE
+    board = [-1, 0, 2, 2, 1, 0, 0, 0, 0, -1]
+    j = 5
+    dj = -1
+
+    print(bi_check(board, player, j, dj))
+
+
+def count_turn_over(board, player, i, j, di, dj):
+    view = 1
+    while board[i + view * di][j + view * dj] == opp(player):
+        view += 1
+
+    if board[i + view * di][j + view * dj] == player:
+        return view - 1
+    else:
+        return 0
+
+
+def is_legal_move(board, player, i, j):
+    if board[i][j] is not SPACE:
+        return False
+
+    for di in range(-1, 2):
+        for dj in range(-1, 2):
+            if count_turn_over(board, player, i, j, di, dj):
+                return True
+
+    return False
 
 
 def main():
@@ -92,9 +126,12 @@ def main():
     while True:
         show_board(board)
         i, j = get_move(player)
-        board[i][j] = player
+        if is_legal_move(board, player, i, j):
+            print("石を置けます")
+        else:
+            print("石を置けません")
         player = opp(player)
 
 
 if __name__ == "__main__":
-    test()
+    main()
