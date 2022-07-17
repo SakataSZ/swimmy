@@ -1,4 +1,7 @@
+title: Document repository
+description : Page to place document created during work.
 theme: jekyll-theme-cayman
 markdown: kramdown
+remote_theme: pages-themes/cayman@v0.2.0
 plugins: [jekyll-remote-theme]
 github: [metadata]
