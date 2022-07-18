@@ -1,0 +1,16 @@
+.page-header {
+    background-size: 200% 200%;
+    animation: bggradient 10s ease infinite;
+}
+
+@keyframes bggradient{
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
