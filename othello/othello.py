@@ -1,12 +1,16 @@
-SPACE = 0   # 何も置かれていない
-BLACK = 1   # 黒
-WHITE = 2   # 白
-OUT = -1    # 盤面の外(番兵)
-SIZE = 10   # 盤面の大きさ
+# 定数
+SPACE = 0  # 何も置かれていない
+BLACK = 1  # 黒
+WHITE = 2  # 白
+OUT = -1  # 盤面の外(番兵)
+SIZE = 10  # 盤面の大きさ
+
+# 数値を文字列に変換する為の辞書
 PLAYER = {BLACK: "黒", WHITE: "白"}
-BOARD = {SPACE: "□", BLACK: "●", WHITE: "◯"}
+BOARD = {BLACK: "●", WHITE: "○", SPACE: "□"}
 
 
+# 二次元配列を表示する練習用の関数
 def show_array(board):
     for i in range(SIZE):
         for j in range(SIZE):
@@ -14,6 +18,7 @@ def show_array(board):
         print()
 
 
+# 盤面を初期化する関数
 def init_board(board):
     for i in range(1, SIZE - 1):
         for j in range(1, SIZE - 1):
@@ -25,6 +30,7 @@ def init_board(board):
     board[5][4] = BLACK
 
 
+# 盤面を表示する関数
 def show_board(board):
     print()
     print("{:5s}".format(''), end='')
@@ -43,6 +49,7 @@ def show_board(board):
     print()
 
 
+# 指し手を取得する関数
 def get_move(player):
     while True:
         print(PLAYER[player] + "の番です")
@@ -59,10 +66,12 @@ def get_move(player):
         print("正しい形式で入力して下さい\n")
 
 
+# 相手プレイヤーを取得する関数
 def opp(player):
     return 3 - player
 
 
+# 裏返す石の数を数える練習用の関数(1方向)
 def check(board, player, j):
     look = 1
     while board[j + look] == opp(player):
@@ -73,14 +82,28 @@ def check(board, player, j):
         return 0
 
 
+# 裏返す石の数を数える練習用の関数(2方向)
+def bi_check(board, player, j, dj):
+    look = 1
+    while board[j + dj * look] == opp(player):
+        look += 1
+    if board[j + dj * look] == player:
+        return look - 1
+    else:
+        return 0
+
+
+# テスト用の関数
 def test():
-    player = BLACK
+    player = WHITE
     board = [-1, 0, 2, 2, 1, 0, 0, 0, 0, -1]
-    j = 1
+    j = 5
+    dj = -1
 
-    print(check(board, player, j))
+    print(bi_check(board, player, j, dj))
 
 
+# 裏返す石の数を数える関数(二次元配列)
 def count_turn_over(board, player, i, j, di, dj):
     view = 1
     while board[i + view * di][j + view * dj] == opp(player):
@@ -92,6 +115,7 @@ def count_turn_over(board, player, i, j, di, dj):
         return 0
 
 
+# 指し手が正当なものか検証する関数
 def is_legal_move(board, player, i, j):
     if board[i][j] is not SPACE:
         return False
@@ -104,14 +128,7 @@ def is_legal_move(board, player, i, j):
     return False
 
 
-def exit_legal_move(board, player):
-    for i in range(1, SIZE - 1):
-        for j in range(1, SIZE - 1):
-            if is_legal_move(board, player, i, j):
-                return True
-    return False
-
-
+# 石を置き, 裏返す関数
 def set_and_turn_over(board, player, i, j):
     for di in range(-1, 2):
         for dj in range(-1, 2):
@@ -119,10 +136,35 @@ def set_and_turn_over(board, player, i, j):
                 continue
             count = count_turn_over(board, player, i, j, di, dj)
             for c in range(count + 1):
-                board[i + c*di][j + c*dj] = player
+                board[i + c * di][j + c * dj] = player
+
     board[i][j] = player
 
 
+# 盤面に石を置く場所があるか検証する関数
+def exit_legal_move(board, player):
+    for i in range(1, SIZE - 1):
+        for j in range(1, SIZE - 1):
+            if is_legal_move(board, player, i, j):
+                return True
+
+    return False
+
+
+# 勝者を表示する関数
+def show_winner(board):
+    cnt = {BLACK: 0, WHITE: 0, SPACE: 0}
+    for i in range(1, SIZE - 1):
+        for j in range(1, SIZE - 1):
+            cnt[board[i][j]] += 1
+
+    print('#' * 15)
+    print("黒 : {}, 白 : {}".format(cnt[BLACK], cnt[WHITE]))
+    print("{}の勝利".format("黒" if cnt[WHITE] < cnt[BLACK] else "白"))
+    print('#' * 15)
+
+
+# 盤面を表示する関数(CUI)
 def show_board_cui(board):
     print()
     print("{:1s}".format(''), end='')
@@ -137,7 +179,7 @@ def show_board_cui(board):
     print()
 
 
-def game():
+def main():
     player = BLACK
     board = [[OUT for _ in range(SIZE)] for _ in range(SIZE)]
     init_board(board)
@@ -145,23 +187,19 @@ def game():
     while True:
         show_board_cui(board)
         if not exit_legal_move(board, player):
-            print(PLAYER[player] + "は置ける場所がありません")
+            print(PLAYER[player] + "石を置ける場所がありません. パスします")
             player = opp(player)
             if not exit_legal_move(board, player):
-                print(PLAYER[player] + "は置ける場所がありません")
+                print(PLAYER[player] + "石を置ける場所がありません. ゲームを終了します")
+                show_winner(board)
                 break
+
         i, j = get_move(player)
         if is_legal_move(board, player, i, j):
             set_and_turn_over(board, player, i, j)
             player = opp(player)
         else:
-            print("不正な手です")
-
-    print("Game Over")
-
-
-def main():
-    game()
+            print("石を置けません")
 
 
 if __name__ == "__main__":
