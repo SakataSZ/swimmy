@@ -118,6 +118,17 @@ def is_legal_move(board, player, i, j):
     return False
 
 
+def set_and_turn_over(board, player, i, j):
+    for di in range(-1, 2):
+        for dj in range(-1, 2):
+            if di == 0 and dj == 0:
+                continue
+            count = count_turn_over(board, player, i, j, di, dj)
+            for c in range(count + 1):
+                board[i + c*di][j + c*dj] = player
+    board[i][j] = player
+
+
 def main():
     player = BLACK
     board = [[OUT for _ in range(SIZE)] for _ in range(SIZE)]
@@ -127,10 +138,11 @@ def main():
         show_board(board)
         i, j = get_move(player)
         if is_legal_move(board, player, i, j):
-            print("石を置けます")
+            set_and_turn_over(board, player, i, j)
+            player = opp(player)
         else:
             print("石を置けません")
-        player = opp(player)
+
 
 
 if __name__ == "__main__":
