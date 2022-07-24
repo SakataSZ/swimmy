@@ -19,7 +19,7 @@ def init_board(board):
             board[i][j] = SPACE
 
     board[4][4] = WHITE
-    board[5][5] = WHITE
+    board[5][5] = BLACK
     board[4][5] = BLACK
     board[5][4] = BLACK
 
@@ -126,7 +126,17 @@ def set_and_turn_over(board, player, i, j):
             count = count_turn_over(board, player, i, j, di, dj)
             for c in range(count + 1):
                 board[i + c*di][j + c*dj] = player
+
     board[i][j] = player
+
+
+def exit_legal_move(board, player):
+    for i in range(1, SIZE - 1):
+        for j in range(1, SIZE - 1):
+            if is_legal_move(board, player, i, j):
+                return True
+
+    return False
 
 
 def main():
@@ -136,13 +146,21 @@ def main():
 
     while True:
         show_board(board)
+        # もしプレイヤーが石を置けなければパスする
+        if not exit_legal_move(board, player):
+            print(PLAYER[player] + "石を置ける場所がありません. パスします")
+            player = opp(player)
+            # 相手も石が置けなければゲーム終了
+            if not exit_legal_move(board, player):
+                print(PLAYER[player] + "石を置ける場所がありません. ゲームを終了します")
+                break
+
         i, j = get_move(player)
         if is_legal_move(board, player, i, j):
             set_and_turn_over(board, player, i, j)
             player = opp(player)
         else:
             print("石を置けません")
-
 
 
 if __name__ == "__main__":

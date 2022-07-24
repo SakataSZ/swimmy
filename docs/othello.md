@@ -26,7 +26,6 @@ data = 1
 data = [1, 2, 3]
 ```
 
-
 そして二次元配列は配列が並んでいるようなデータ構造です.
 
 ```python
@@ -34,7 +33,6 @@ data = [[1, 2, 3],
         [4, 5, 6],
         [7, 8, 9]]
 ```
-
 
 > 二次元配列を用いることでオセロの盤面を簡単に表現できます.
 > ゲーム制作や画像処理など様々な場面で使用されます.
@@ -1262,12 +1260,14 @@ if __name__ == "__main__":
 ```
 
 ## 2.4 石をひっくり反す
-石をひっくり反す機能はここまでで作成した関数を応用することで実現可能です.
+
+石をひっくり反す機能はここまでで作成した関数を活用することで実現可能です.
 `is_legal_move()`で正当な差し手か検証した後, 8方向それぞれ`count_turn_over()`で反す石の数を数えてfor文で盤面を書き換えれば良いです.
 
 ### 問題2-11
+
 指し手が入力されたら石を置いて, 挟める石があるならそれをひっくり返す関数`set_and_turn_over()`を作成して下さい.
-`main()`もゲームが正常に進行するように適宜書き換えてください.
+ゲームが正常に進行するように`main()`も適宜書き換えてください.
 
 * 関数名 : `set_and_turn_over()`
 * 引数 : `board`, `player`, `i`, `j`
@@ -1356,3 +1356,390 @@ if __name__ == "__main__":
 3. `5 5`に白の石を置こうとしますが既に石が置いてあるので, 再度入力を求めます
 4. `5 3`に白の石を置きます. 石をひっくり返した後ターンを黒にします.
 
+### 模範解答
+
+模範解答プログラムを以下に示します.
+
+```python
+SPACE = 0   # 何も置かれていない
+BLACK = 1   # 黒
+WHITE = 2   # 白
+OUT = -1    # 盤面の外(番兵)
+SIZE = 10   # 盤面の大きさ
+PLAYER = {BLACK: "黒", WHITE: "白"}
+
+
+def show_array(board):
+    for i in range(SIZE):
+        for j in range(SIZE):
+            print("{:3d}".format(board[i][j]), end='')
+        print()
+
+
+def init_board(board):
+    for i in range(1, SIZE - 1):
+        for j in range(1, SIZE - 1):
+            board[i][j] = SPACE
+
+    board[4][4] = WHITE
+    board[5][5] = WHITE
+    board[4][5] = BLACK
+    board[5][4] = BLACK
+
+
+def show_board(board):
+    print()
+    print("{:5s}".format(''), end='')
+    for n in range(1, SIZE - 1):
+        print("{:3d}".format(n), end='')
+    print()
+    for i in range(SIZE):
+        if i == 0 or i == 9:
+            print("{:2s}".format(''), end='')
+        else:
+            print("{:<2d}".format(i), end='')
+
+        for j in range(SIZE):
+            print("{:3d}".format(board[i][j]), end='')
+        print()
+    print()
+
+
+def get_move(player):
+    # 正しい形式で入力されるまで繰り返す
+    while True:
+        print(PLAYER[player] + "の番です")
+        move = input("指し手を入力してください : ")
+        move = move.split(' ')
+        # 2つの文字がスペース区切りで入力されているか
+        if len(move) == 2:
+            i = move[0]
+            j = move[1]
+            # 2つの文字が数字か
+            if i.isdecimal() and j.isdecimal():
+                i = int(i)      # 数値に変換
+                j = int(j)      # 数値に変換
+                # 2つの数値が盤面に収まる値か
+                if 1 <= i <= 8 and 1 <= j <= 8:
+                    return [i, j]
+        print("正しい形式で入力して下さい\n")
+
+
+def opp(player):
+    return 3 - player
+
+
+def check(board, player, j):
+    look = 1
+    while board[j + look] == opp(player):
+        look += 1
+    if board[j + look] == player:
+        return look - 1
+    else:
+        return 0
+
+
+def bi_check(board, player, j, dj):
+    look = 1
+    while board[j + dj*look] == opp(player):
+        look += 1
+    if board[j + dj*look] == player:
+        return look - 1
+    else:
+        return 0
+
+
+def test():
+    player = WHITE
+    board = [-1, 0, 2, 2, 1, 0, 0, 0, 0, -1]
+    j = 5
+    dj = -1
+
+    print(bi_check(board, player, j, dj))
+
+
+def count_turn_over(board, player, i, j, di, dj):
+    view = 1
+    while board[i + view * di][j + view * dj] == opp(player):
+        view += 1
+
+    if board[i + view * di][j + view * dj] == player:
+        return view - 1
+    else:
+        return 0
+
+
+def is_legal_move(board, player, i, j):
+    if board[i][j] is not SPACE:
+        return False
+
+    for di in range(-1, 2):
+        for dj in range(-1, 2):
+            if count_turn_over(board, player, i, j, di, dj):
+                return True
+
+    return False
+
+
+def set_and_turn_over(board, player, i, j):
+    for di in range(-1, 2):
+        for dj in range(-1, 2):
+            if di == 0 and dj == 0:
+                continue
+            count = count_turn_over(board, player, i, j, di, dj)
+            for c in range(count + 1):
+                board[i + c*di][j + c*dj] = player
+    board[i][j] = player
+
+
+def main():
+    player = BLACK
+    board = [[OUT for _ in range(SIZE)] for _ in range(SIZE)]
+    init_board(board)
+
+    while True:
+        show_board(board)
+        i, j = get_move(player)
+        if is_legal_move(board, player, i, j):
+            set_and_turn_over(board, player, i, j)
+            player = opp(player)
+        else:
+            print("石を置けません")
+
+
+
+if __name__ == "__main__":
+    main()
+
+```
+
+## 2.5 ゲームの終了と勝敗
+
+オセロは**白も黒も石が置けない**場合, ゲーム終了となります. 
+つまり手番が回ってきた時, 石を置ける場所が一か所でもあるか検証できればパスの判定やゲーム終了の判定が可能となります.
+この機能も既に作成した関数を活用することで実現可能です.
+
+### 問題2-12
+
+盤面とプレイヤーを入力すると一か所でも石を置けるなら`True`, 一か所も石を置けないなら`False`を戻り値として返す関数`exit_legal_move()`を作成して下さい.
+ゲームが正常に進行するように`main()`も適宜書き換えてください.
+
+* 関数名 : `exit_legal_move()`
+* 引数 : `board`, `player`
+* 戻り値 : `True` または `False`
+
+期待する出力は以下の通りです.
+また, 検証を簡単にするため初期盤面を変更しています.
+
+```
+       1  2  3  4  5  6  7  8
+   -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+1  -1  0  0  0  0  0  0  0  0 -1
+2  -1  0  0  0  0  0  0  0  0 -1
+3  -1  0  0  0  0  0  0  0  0 -1
+4  -1  0  0  0  2  1  0  0  0 -1
+5  -1  0  0  0  1  1  0  0  0 -1
+6  -1  0  0  0  0  0  0  0  0 -1
+7  -1  0  0  0  0  0  0  0  0 -1
+8  -1  0  0  0  0  0  0  0  0 -1
+   -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+
+黒の番です
+指し手を入力してください : 3 4
+
+       1  2  3  4  5  6  7  8
+   -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+1  -1  0  0  0  0  0  0  0  0 -1
+2  -1  0  0  0  0  0  0  0  0 -1
+3  -1  0  0  0  1  0  0  0  0 -1
+4  -1  0  0  0  1  1  0  0  0 -1
+5  -1  0  0  0  1  1  0  0  0 -1
+6  -1  0  0  0  0  0  0  0  0 -1
+7  -1  0  0  0  0  0  0  0  0 -1
+8  -1  0  0  0  0  0  0  0  0 -1
+   -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+
+白石を置ける場所がありません. パスします
+黒石を置ける場所がありません. ゲームを終了します
+```
+
+### 模範解答
+
+模範解答プログラムを以下に示します.
+
+```python
+SPACE = 0   # 何も置かれていない
+BLACK = 1   # 黒
+WHITE = 2   # 白
+OUT = -1    # 盤面の外(番兵)
+SIZE = 10   # 盤面の大きさ
+PLAYER = {BLACK: "黒", WHITE: "白"}
+
+
+def show_array(board):
+    for i in range(SIZE):
+        for j in range(SIZE):
+            print("{:3d}".format(board[i][j]), end='')
+        print()
+
+
+def init_board(board):
+    for i in range(1, SIZE - 1):
+        for j in range(1, SIZE - 1):
+            board[i][j] = SPACE
+
+    board[4][4] = WHITE
+    board[5][5] = BLACK
+    board[4][5] = BLACK
+    board[5][4] = BLACK
+
+
+def show_board(board):
+    print()
+    print("{:5s}".format(''), end='')
+    for n in range(1, SIZE - 1):
+        print("{:3d}".format(n), end='')
+    print()
+    for i in range(SIZE):
+        if i == 0 or i == 9:
+            print("{:2s}".format(''), end='')
+        else:
+            print("{:<2d}".format(i), end='')
+
+        for j in range(SIZE):
+            print("{:3d}".format(board[i][j]), end='')
+        print()
+    print()
+
+
+def get_move(player):
+    # 正しい形式で入力されるまで繰り返す
+    while True:
+        print(PLAYER[player] + "の番です")
+        move = input("指し手を入力してください : ")
+        move = move.split(' ')
+        # 2つの文字がスペース区切りで入力されているか
+        if len(move) == 2:
+            i = move[0]
+            j = move[1]
+            # 2つの文字が数字か
+            if i.isdecimal() and j.isdecimal():
+                i = int(i)      # 数値に変換
+                j = int(j)      # 数値に変換
+                # 2つの数値が盤面に収まる値か
+                if 1 <= i <= 8 and 1 <= j <= 8:
+                    return [i, j]
+        print("正しい形式で入力して下さい\n")
+
+
+def opp(player):
+    return 3 - player
+
+
+def check(board, player, j):
+    look = 1
+    while board[j + look] == opp(player):
+        look += 1
+    if board[j + look] == player:
+        return look - 1
+    else:
+        return 0
+
+
+def bi_check(board, player, j, dj):
+    look = 1
+    while board[j + dj*look] == opp(player):
+        look += 1
+    if board[j + dj*look] == player:
+        return look - 1
+    else:
+        return 0
+
+
+def test():
+    player = WHITE
+    board = [-1, 0, 2, 2, 1, 0, 0, 0, 0, -1]
+    j = 5
+    dj = -1
+
+    print(bi_check(board, player, j, dj))
+
+
+def count_turn_over(board, player, i, j, di, dj):
+    view = 1
+    while board[i + view * di][j + view * dj] == opp(player):
+        view += 1
+
+    if board[i + view * di][j + view * dj] == player:
+        return view - 1
+    else:
+        return 0
+
+
+def is_legal_move(board, player, i, j):
+    if board[i][j] is not SPACE:
+        return False
+
+    for di in range(-1, 2):
+        for dj in range(-1, 2):
+            if count_turn_over(board, player, i, j, di, dj):
+                return True
+
+    return False
+
+
+def set_and_turn_over(board, player, i, j):
+    for di in range(-1, 2):
+        for dj in range(-1, 2):
+            if di == 0 and dj == 0:
+                continue
+            count = count_turn_over(board, player, i, j, di, dj)
+            for c in range(count + 1):
+                board[i + c*di][j + c*dj] = player
+
+    board[i][j] = player
+
+
+def exit_legal_move(board, player):
+    for i in range(1, SIZE - 1):
+        for j in range(1, SIZE - 1):
+            if is_legal_move(board, player, i, j):
+                return True
+
+    return False
+
+
+def main():
+    player = BLACK
+    board = [[OUT for _ in range(SIZE)] for _ in range(SIZE)]
+    init_board(board)
+
+    while True:
+        show_board(board)
+        # もしプレイヤーが石を置けなければパスする
+        if not exit_legal_move(board, player):
+            print(PLAYER[player] + "石を置ける場所がありません. パスします")
+            player = opp(player)
+            # 相手も石が置けなければゲーム終了
+            if not exit_legal_move(board, player):
+                print(PLAYER[player] + "石を置ける場所がありません. ゲームを終了します")
+                break
+
+        i, j = get_move(player)
+        if is_legal_move(board, player, i, j):
+            set_and_turn_over(board, player, i, j)
+            player = opp(player)
+        else:
+            print("石を置けません")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+これで殆どオセロは完成ですがどちらが勝利したか判定する必要があります.
+オセロの盤面を1マスずつ確認して白と黒, それぞれが何個あるか数えれば良いです.
+
+### 問題2-13
+
+盤面の白と黒の石をそれぞれカウントして勝者を判定する関数`show_winner()`を作成してください.
